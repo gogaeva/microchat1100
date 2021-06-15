@@ -2,17 +2,17 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 
 class ChatModel extends ChangeNotifier {
-  late bool _pinned;
-  late int _unreadCount;
+  ChatModel({required this.pinned, required this.unreadCount});
+  bool pinned;
+  int unreadCount;
 
-  bool get pinned => _pinned;
   void pin() {
-    _pinned = !_pinned;
+    pinned = !pinned;
     notifyListeners();
   }
-    void get unreadCount => _unreadCount;
-    void unreadAdd(int news) {
-      _unreadCount += news;
-      notifyListeners();
-    }
+
+  void unreadAdd(int news) {
+    unreadCount += news;
+    notifyListeners();
+  }
 }
