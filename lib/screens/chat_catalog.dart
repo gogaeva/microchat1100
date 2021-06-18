@@ -3,11 +3,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:telegrammm/models/chat.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatCatalog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -19,28 +19,22 @@ class ChatCatalog extends StatelessWidget {
         actions: [IconButton(icon: Icon(Icons.search), onPressed: () => {})],
       ),
       backgroundColor: Colors.black,
-      body: ListView(
-        children: <Widget>[
-          ChatLabel(
-            color: Colors.pink[200]!,
-            name: "Виталий",
-            lastMessage: "Унтерсанчизес",
-            unreadCount: 228,
-            pinned: true,
-          ),
-          ChatLabel(
-            color: Colors.purple[200]!,
-            name: "Abdulla",
-            lastMessage: "Alhamdulillah",
-            unreadCount: 42,
-            pinned: false,
-          ),
-        ],
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('chat-catalog').snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (!snapshot.hasData) return const Text("Loading...");
+          return ListView.builder(
+            itemCount: snapshot.data?.docs.length,
+            itemBuilder: (context, index) =>
+            ChatLabel.fromDb(snapshot.data?.docs[index]),
+          );
+        }
       ),
     );
   }
 }
 
+//TODO: lastMessageTime (timestamp)
 class ChatLabel extends StatelessWidget {
   ChatLabel({
     required this.color,
@@ -49,6 +43,14 @@ class ChatLabel extends StatelessWidget {
     required this.pinned,
     required this.unreadCount,
   });
+
+  ChatLabel.fromDb(QueryDocumentSnapshot<Object?>? document) : this(
+    color: (Colors.pink[200])!,
+    name: document?['name'],
+    lastMessage: document?['lastMessage'],
+    pinned: document?['pinned'],
+    unreadCount: document?['unreadCount'],
+  );
 
   final Color color;
   final String name;
@@ -65,7 +67,6 @@ class ChatLabel extends StatelessWidget {
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: color,
-              //radius: 25.0,
             ),
             title: Text(
               name,
@@ -84,12 +85,9 @@ class ChatLabel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  //DateTime.parse("2012-02-27").toString(),
-                  // DateTime.now().weekday.toString(),
                   timeLabel('2021-04-09 20:00:00'),
                   style: TextStyle(color: Colors.white),
                 ),
-                //if (widget.unreadCount > 0)
                 if (Provider.of<ChatModel>(context).pinned)
                   SvgPicture.asset(
                     "assets/push-pin-svgrepo-com.svg",
@@ -119,11 +117,11 @@ class ChatLabel extends StatelessWidget {
               items: _menuItems(context),
             ),
           );
-          //);
         });
   }
 }
 
+//TODO: Expanded
 List<PopupMenuItem<ListTile>> _menuItems(BuildContext context) {
   var chat = context.read<ChatModel>();
   return <PopupMenuItem<ListTile>>[

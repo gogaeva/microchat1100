@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1029812922336",
+    "project_id": "telegrammm-21b1b",
+    "storage_bucket": "telegrammm-21b1b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1029812922336:android:eb1018bcfcb68b87c0ad85",
+        "android_client_info": {
+          "package_name": "com.example.telegrammm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1029812922336-rhlgg41s6i30so9k7vp8mmrtt53g19jt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLtCCbKPtQ6O_6U6AgbRIUQK6rs85lUDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1029812922336-rhlgg41s6i30so9k7vp8mmrtt53g19jt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
