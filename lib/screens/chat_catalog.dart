@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:telegrammm/screens/loading.dart';
+import 'package:telegrammm/screens/chat.dart';
 
 class ChatCatalog extends StatefulWidget {
   ChatCatalog({required this.userId});
@@ -56,7 +57,7 @@ class _ChatCatalogState extends State<ChatCatalog> {
           onPressed: () => {},
         ),
         title: Text("Chats"),
-        backgroundColor: Colors.grey,
+        backgroundColor: Colors.grey[800],
         actions: [IconButton(icon: Icon(Icons.search), onPressed: () => {})],
       ),
       backgroundColor: Colors.black,
@@ -81,6 +82,7 @@ class _ChatCatalogState extends State<ChatCatalog> {
 //TODO: lastMessageTime (timestamp)
 class ChatLabel extends StatelessWidget {
   ChatLabel({
+    required this.id,
     required this.photoUrl,
     required this.name,
     this.lastMessage,
@@ -90,6 +92,7 @@ class ChatLabel extends StatelessWidget {
 
   ChatLabel.fromDb(QueryDocumentSnapshot<Object?>? document)
       : this(
+          id: document?['id'],
           photoUrl: '',
           name: document?['name'],
           //lastMessage: document?['lastMessage'],
@@ -100,6 +103,7 @@ class ChatLabel extends StatelessWidget {
           unreadCount: 11,
         );
 
+  final String id;
   final String photoUrl;
   final String name;
   final String? lastMessage;
@@ -124,9 +128,12 @@ class ChatLabel extends StatelessWidget {
             animateMenuItems: true,
             blurBackgroundColor: Colors.black54,
             bottomOffsetHeight: 100,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => Chat(peerId: id, peerName: name, peerAvatar: '',)));
+            },
             menuItems: <FocusedMenuItem>[
               FocusedMenuItem(
+                backgroundColor: Colors.grey,
                 title: context.read<ChatModel>().pinned
                     ? Text("Pin off")
                     : Text("Pin"),

@@ -97,10 +97,12 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
         appBar: AppBar(
+          backgroundColor: Colors.grey[800],
           title: Text(
             "Sign in",
-            style: TextStyle(color: Color(0xfff5a623), fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
         ),
@@ -124,7 +126,7 @@ class LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 20.0),
                 ElevatedButton(
-                  style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color?>(Colors.pink[400])),
+                  style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color?>(Colors.grey)),
                   child: Text(
                       "Sign in",
                       style: TextStyle(color: Colors.white),
