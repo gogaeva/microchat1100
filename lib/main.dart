@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:telegrammm/screens/chat_catalog.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:telegrammm/screens/loading.dart';
+import 'package:telegrammm/screens/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,20 +22,11 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               visualDensity: VisualDensity.adaptivePlatformDensity,
             ),
-            home: ChatCatalog(),
+            home: LoginScreen(),
           );
         else
           return Loading();
       },
-    );
-  }
-}
-
-class Loading extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Loading...'),
     );
   }
 }

@@ -7,10 +7,48 @@ import 'package:telegrammm/models/chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:telegrammm/screens/loading.dart';
 
-class ChatCatalog extends StatelessWidget {
+class ChatCatalog extends StatefulWidget {
+  ChatCatalog({required this.userId});
+
+  final String? userId;
+
+  @override
+  _ChatCatalogState createState() => _ChatCatalogState();
+}
+
+class _ChatCatalogState extends State<ChatCatalog> {
+  late List<String> chatWith;
+  late Query<Map<String, dynamic>> peers;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+    print('INITSTATE FINISHED');
+  }
+
+  void fetchData() async {
+    this.setState(() {
+      isLoading = true;
+    });
+    //TODO: create stream to use in build
+    var snapshot = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+    List<dynamic> chatWith = snapshot.get('chatWith');
+    print(chatWith.toString());
+    peers = FirebaseFirestore.instance.collection('users')
+        .where('id', whereIn: chatWith);
+    print('PEERS INITIALIZED');
+    this.setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    print('BUILDING STARTS');
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -22,15 +60,18 @@ class ChatCatalog extends StatelessWidget {
         actions: [IconButton(icon: Icon(Icons.search), onPressed: () => {})],
       ),
       backgroundColor: Colors.black,
-      body: StreamBuilder(
+      body: isLoading ? Loading() : StreamBuilder(
           stream:
-              FirebaseFirestore.instance.collection('chat-catalog').snapshots(),
+              //FirebaseFirestore.instance.collection('chat-catalog').snapshots(),
+              //FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
+              peers.snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (!snapshot.hasData) return const Text("Loading...");
             return ListView.builder(
               itemCount: snapshot.data?.docs.length,
-              itemBuilder: (context, index) => ChatLabel.fromDb(snapshot.data?.docs[index]),
+              itemBuilder: (context, index) =>
+                  ChatLabel.fromDb(snapshot.data?.docs[index]),
             );
           }),
     );
@@ -40,25 +81,28 @@ class ChatCatalog extends StatelessWidget {
 //TODO: lastMessageTime (timestamp)
 class ChatLabel extends StatelessWidget {
   ChatLabel({
-    required this.color,
+    required this.photoUrl,
     required this.name,
-    required this.lastMessage,
+    this.lastMessage,
     required this.pinned,
     required this.unreadCount,
   });
 
   ChatLabel.fromDb(QueryDocumentSnapshot<Object?>? document)
       : this(
-          color: (Colors.pink[200])!,
+          photoUrl: '',
           name: document?['name'],
-          lastMessage: document?['lastMessage'],
-          pinned: document?['pinned'],
-          unreadCount: document?['unreadCount'],
+          //lastMessage: document?['lastMessage'],
+          lastMessage: '',
+          //pinned: document?['pinned'],
+          //unreadCount: document?['unreadCount'],
+          pinned: true,
+          unreadCount: 11,
         );
 
-  final Color color;
+  final String photoUrl;
   final String name;
-  final String lastMessage;
+  final String? lastMessage;
   final bool pinned;
   final int unreadCount;
 
@@ -94,7 +138,7 @@ class ChatLabel extends StatelessWidget {
             ],
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: color,
+                backgroundColor: Colors.white,
               ),
               title: Text(
                 name,
@@ -105,7 +149,7 @@ class ChatLabel extends StatelessWidget {
                 ),
               ),
               subtitle: Text(
-                lastMessage,
+                lastMessage ?? '',
                 style: TextStyle(color: Colors.grey),
               ),
               trailing: Column(
