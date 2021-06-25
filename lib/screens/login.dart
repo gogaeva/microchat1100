@@ -7,13 +7,13 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:telegrammm/screens/chat_catalog.dart';
 
-
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future signInWithEmailAndPassword(String email, String password) async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
       return userCredential.user?.uid;
     } on FirebaseAuthException catch (err) {
       if (err.code == 'user-not-found') {
@@ -56,7 +56,8 @@ class LoginScreenState extends State<LoginScreen> {
     if (prefs?.getString('id') != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ChatCatalog(userId: prefs?.getString('id'))),
+        MaterialPageRoute(
+            builder: (context) => ChatCatalog(userId: prefs?.getString('id'))),
       );
     }
 
@@ -72,32 +73,38 @@ class LoginScreenState extends State<LoginScreen> {
       isLoading = true;
     });
 
-    String? authUserId = await _authService.signInWithEmailAndPassword(_email, _password);
-      if (authUserId != null) {
-        final QuerySnapshot result =
-        await FirebaseFirestore.instance.collection('users').where('id', isEqualTo: authUserId).get();
-        final List<DocumentSnapshot> documents = result.docs;
-        String? dbUserId = documents[0].id;
-        await prefs?.setString('id', dbUserId);
+    String? authUserId =
+        await _authService.signInWithEmailAndPassword(_email, _password);
+    if (authUserId != null) {
+      final QuerySnapshot result = await FirebaseFirestore.instance
+          .collection('users')
+          .where('id', isEqualTo: authUserId)
+          .get();
+      final List<DocumentSnapshot> documents = result.docs;
+      String? dbUserId = documents[0].id;
+      await prefs?.setString('id', dbUserId);
 
-        Fluttertoast.showToast(msg: "Sign in success");
-        this.setState(() {
-          isLoading = false;
-        });
+      Fluttertoast.showToast(msg: "Sign in success");
+      this.setState(() {
+        isLoading = false;
+      });
 
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ChatCatalog(userId: dbUserId)));
-      } else {
-        Fluttertoast.showToast(msg: "Sign in fail");
-        this.setState(() {
-          isLoading = false;
-        });
-      }
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChatCatalog(userId: dbUserId)));
+    } else {
+      Fluttertoast.showToast(msg: "Sign in fail");
+      this.setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+        backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.grey[800],
           title: Text(
@@ -106,36 +113,64 @@ class LoginScreenState extends State<LoginScreen> {
           ),
           centerTitle: true,
         ),
-        body: isLoading ? Loading() : Container(
-          padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
-          child: Form(
-            child: Column(
-              children: <Widget>[
-                SizedBox(height: 20.0),
-                TextFormField(
-                  onChanged: (val) {
-                    setState(() => _email = val);
-                  },
-                ),
-                SizedBox(height: 20.0),
-                TextFormField(
-                  obscureText: true,
-                  onChanged: (val) {
-                    setState(() => _password = val);
-                  },
-                ),
-                SizedBox(height: 20.0),
-                ElevatedButton(
-                  style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color?>(Colors.grey)),
-                  child: Text(
-                      "Sign in",
-                      style: TextStyle(color: Colors.white),
+        body: isLoading
+            ? Loading()
+            : Container(
+                padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
+                child: Form(
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: 20.0),
+                      TextFormField(
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(25.0))),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(25.0)),
+                          ),
+                        ),
+                        onChanged: (val) {
+                          setState(() => _email = val);
+                        },
+                      ),
+                      SizedBox(height: 20.0),
+                      TextFormField(
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                              borderRadius:
+                              BorderRadius.all(Radius.circular(25.0))),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
+                            borderRadius:
+                            BorderRadius.all(Radius.circular(25.0)),
+                          ),
+                        ),
+                        obscureText: true,
+                        onChanged: (val) {
+                          setState(() => _password = val);
+                        },
+                      ),
+                      SizedBox(height: 20.0),
+                      ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all<Color?>(Colors.grey)),
+                        child: Text(
+                          "Sign in",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        onPressed: () async => handleSignIn(),
+                      ),
+                    ],
                   ),
-                  onPressed: () async => handleSignIn(),
                 ),
-              ],
-            ),
-          ),
-        ));
+              ));
   }
 }

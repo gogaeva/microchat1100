@@ -61,10 +61,7 @@ class ChatScreenState extends State<ChatScreen> {
   String groupChatId = "";
   SharedPreferences? prefs;
 
-  //File? imageFile;
   bool isLoading = false;
-  //bool isShowSticker = false;
-  String imageUrl = "";
 
   final TextEditingController textEditingController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
@@ -89,17 +86,17 @@ class ChatScreenState extends State<ChatScreen> {
 
   readLocal() async {
     prefs = await SharedPreferences.getInstance();
-    id = prefs?.getString('id') ?? '';
+    var dbUserId = prefs?.getString('id') ?? '';
+    var snapshot = await FirebaseFirestore.instance.collection('users').doc(dbUserId).get();
+    var id = snapshot.get('id');
     if (id.hashCode <= peerId.hashCode) {
       groupChatId = 'messages-$id-$peerId';
     } else {
       groupChatId = 'messages-$peerId-$id';
     }
-
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(id)
-        .update({'chattingWith': peerId});
+    print(id);
+    print(peerId);
+    print(groupChatId);
 
     setState(() {});
   }
@@ -138,30 +135,9 @@ class ChatScreenState extends State<ChatScreen> {
   Widget buildItem(int index, DocumentSnapshot? document) {
     if (document != null) {
       bool mine = document.get('idFrom') == id;
-      //if (document.get('idFrom') == id) {
-        // Right (my message)
-        // return Row(
-        //   children: <Widget>[
-        //     Container(
-        //       child: Text(
-        //         document.get('content'),
-        //         style: TextStyle(color: Colors.white),
-        //       ),
-        //       padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-        //       width: 200.0,
-        //       decoration: BoxDecoration(
-        //           color: mine ? Colors.grey : Colors.grey[800],
-        //           borderRadius: BorderRadius.circular(8.0)
-        //       ),
-        //       margin: mine
-        //           ? EdgeInsets.only(bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0)
-        //           : EdgeInsets.only(left: 10.0),
-        //     )
-        //   ],
-        //   mainAxisAlignment: mine ? MainAxisAlignment.end : MainAxisAlignment.start,
-        // );
-     // } else {
-        // Left (peer message)
+      print('mine $mine');
+      print('id $id');
+      print('id from doc ${document.get('idFrom')}');
         return Container(
           child: Column(
             children: <Widget>[
@@ -272,7 +248,7 @@ class ChatScreenState extends State<ChatScreen> {
                   hintText: 'Type your message...',
                   hintStyle: TextStyle(color: Colors.grey),
                 ),
-                focusNode: focusNode,
+                //focusNode: focusNode,
               ),
             ),
           ),

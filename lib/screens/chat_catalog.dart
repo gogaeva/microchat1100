@@ -41,7 +41,7 @@ class _ChatCatalogState extends State<ChatCatalog> {
     print(chatWith.toString());
     peers = FirebaseFirestore.instance.collection('users')
         .where('id', whereIn: chatWith);
-    print('PEERS INITIALIZED');
+    //print('PEERS INITIALIZED');
     this.setState(() {
       isLoading = false;
     });
