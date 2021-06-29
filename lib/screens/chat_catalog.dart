@@ -10,7 +10,19 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:telegrammm/screens/loading.dart';
 import 'package:telegrammm/screens/chat.dart';
 
+class User {
+  User(this.id, this.name, this.photoUrl, this.pinned, this.lastMsg, this.lastMsgTime);
+
+  late String name;
+  late String id;
+  late String? photoUrl;
+  late bool pinned;
+  late String lastMsg;
+  late String lastMsgTime;
+}
+
 class ChatCatalog extends StatefulWidget {
+  //late User _user;
   ChatCatalog({required this.userId});
 
   final String? userId;
@@ -20,31 +32,31 @@ class ChatCatalog extends StatefulWidget {
 }
 
 class _ChatCatalogState extends State<ChatCatalog> {
-  late List<String> chatWith;
-  late Query<Map<String, dynamic>> peers;
   bool isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-    print('INITSTATE FINISHED');
-  }
-
-  void fetchData() async {
-    this.setState(() {
-      isLoading = true;
-    });
-    //TODO: create stream to use in build
-    var snapshot = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
-    List<dynamic> chatWith = snapshot.get('chatWith');
-    print(chatWith.toString());
-    peers = FirebaseFirestore.instance.collection('users')
-        .where('id', whereIn: chatWith);
-    //print('PEERS INITIALIZED');
-    this.setState(() {
-      isLoading = false;
-    });
+  Future<User> fetchData(String peerId, bool pinned) async {
+    print("FUTURE BEGIN");
+    var peerDoc = await FirebaseFirestore.instance.collection('users')
+        .doc(peerId).get();
+    print(1);
+    String name = peerDoc.get('name');
+    String? photoUrl = peerDoc.get('photoURL');
+    print(2);
+    String chatId = (widget.userId.hashCode <= peerId.hashCode)
+        ? 'messages-${widget.userId}-$peerId'
+        : 'messages-$peerId-${widget.userId}';
+    var querySnapshot = await FirebaseFirestore.instance.collection('messages')
+        .doc(chatId).collection(chatId).get();
+    print(3);
+    var msgDoc = querySnapshot.docs.last;
+    String timestamp = msgDoc['timestamp'];
+    String msg = msgDoc['content'];
+    print(name);
+    print(pinned);
+    print(msg);
+    print("FUTURE END");
+    //widget._user = User(peerId, name, photoUrl, pinned, msg, timestamp);
+    return User(peerId, name, photoUrl, pinned, msg, timestamp);
   }
 
   @override
@@ -62,51 +74,68 @@ class _ChatCatalogState extends State<ChatCatalog> {
       ),
       backgroundColor: Colors.black,
       body: isLoading ? Loading() : StreamBuilder(
-          stream:
-              //FirebaseFirestore.instance.collection('chat-catalog').snapshots(),
-              //FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
-              peers.snapshots(),
+          stream: FirebaseFirestore.instance.collection('users').doc(
+              widget.userId)
+              .collection('chatsWith').snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (!snapshot.hasData) return const Text("Loading...");
             return ListView.builder(
               itemCount: snapshot.data?.docs.length,
-              itemBuilder: (context, index) =>
-                  ChatLabel.fromDb(snapshot.data?.docs[index]),
+              itemBuilder: (context, index) {
+                var document = snapshot.data?.docs[index];
+                String peerId = document?['id'];
+                bool pinned = document?['pinned'];
+                print(peerId);
+                print(pinned);
+                return FutureBuilder(
+                  future: fetchData(peerId, pinned),
+                  builder: (context, user) {
+                    print('FUTURE BUILD');
+                    if (user.hasData)
+                      return ChatLabel.fromUser(user.data! as User);
+                    else {
+                      if (user.hasError)
+                        print(user.error);
+                      return Loading();
+                    }
+                  }
+                );
+              },
             );
           }),
     );
   }
 }
 
-//TODO: lastMessageTime (timestamp)
 class ChatLabel extends StatelessWidget {
+  // ChatLabel({Key key}) : super(key: key);
   ChatLabel({
     required this.id,
     required this.photoUrl,
     required this.name,
     this.lastMessage,
+    this.lastMessageTime,
     required this.pinned,
     required this.unreadCount,
   });
 
-  ChatLabel.fromDb(QueryDocumentSnapshot<Object?>? document)
+  ChatLabel.fromUser(User user)
       : this(
-          id: document?['id'],
-          photoUrl: '',
-          name: document?['name'],
-          //lastMessage: document?['lastMessage'],
-          lastMessage: '',
-          //pinned: document?['pinned'],
-          //unreadCount: document?['unreadCount'],
-          pinned: true,
-          unreadCount: 11,
-        );
+    id: user.id,
+    photoUrl: user.photoUrl,
+    name: user.name,
+    lastMessage: user.lastMsg,
+    lastMessageTime: user.lastMsgTime,
+    pinned: user.pinned,
+    unreadCount: 11,
+  );
 
   final String id;
-  final String photoUrl;
+  final String? photoUrl;
   final String name;
   final String? lastMessage;
+  final String? lastMessageTime;
   final bool pinned;
   final int unreadCount;
 
@@ -114,10 +143,13 @@ class ChatLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
         create: (context) =>
-            ChatModel(pinned: pinned, unreadCount: unreadCount),
+        ChatModel(pinned: pinned, unreadCount: 11),
         builder: (context, _) {
           return FocusedMenuHolder(
-            menuWidth: MediaQuery.of(context).size.width * 0.50,
+            menuWidth: MediaQuery
+                .of(context)
+                .size
+                .width * 0.50,
             blurSize: 5.0,
             menuItemExtent: 45,
             menuBoxDecoration: BoxDecoration(
@@ -129,15 +161,27 @@ class ChatLabel extends StatelessWidget {
             blurBackgroundColor: Colors.black54,
             bottomOffsetHeight: 100,
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => Chat(peerId: id, peerName: name, peerAvatar: '',)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          Chat(
+                            peerId: id,
+                            peerName: name,
+                            peerAvatar: '',
+                          )));
             },
             menuItems: <FocusedMenuItem>[
               FocusedMenuItem(
                 backgroundColor: Colors.grey,
-                title: context.read<ChatModel>().pinned
+                title: context
+                    .read<ChatModel>()
+                    .pinned
                     ? Text("Pin off")
                     : Text("Pin"),
-                trailingIcon: context.read<ChatModel>().pinned
+                trailingIcon: context
+                    .read<ChatModel>()
+                    .pinned
                     ? Icon(MdiIcons.pinOff)
                     : Icon(MdiIcons.pin),
                 onPressed: () => context.read<ChatModel>().pin(),
@@ -164,10 +208,12 @@ class ChatLabel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    timeLabel('2021-04-09 20:00:00'),
+                    timeLabel(lastMessageTime ?? ''),
                     style: TextStyle(color: Colors.white),
                   ),
-                  if (Provider.of<ChatModel>(context).pinned)
+                  if (Provider
+                      .of<ChatModel>(context)
+                      .pinned)
                     SvgPicture.asset(
                       "assets/push-pin-svgrepo-com.svg",
                       width: 12.0,
@@ -176,7 +222,11 @@ class ChatLabel extends StatelessWidget {
                     )
                   else
                     Container(
-                      child: Text(unreadCount.toString()),
+                      child: Text(
+                          context
+                              .read<ChatModel>()
+                              .unreadCount
+                              .toString()),
                       decoration: ShapeDecoration(
                         color: Colors.white,
                         shape: RoundedRectangleBorder(
@@ -196,8 +246,8 @@ class ChatLabel extends StatelessWidget {
   }
 }
 
-String timeLabel(String time) {
-  var then = DateTime.parse(time);
+String timeLabel(String timestamp) {
+  var then = DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp));
   var now = DateTime.now();
   var diff = now.difference(then);
   if (diff.inDays > 6)
