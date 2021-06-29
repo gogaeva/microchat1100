@@ -75,14 +75,15 @@ class LoginScreenState extends State<LoginScreen> {
 
     String? authUserId =
         await _authService.signInWithEmailAndPassword(_email, _password);
-    if (authUserId != null) {
-      final QuerySnapshot result = await FirebaseFirestore.instance
-          .collection('users')
-          .where('id', isEqualTo: authUserId)
-          .get();
-      final List<DocumentSnapshot> documents = result.docs;
-      String? dbUserId = documents[0].id;
-      await prefs?.setString('id', dbUserId);
+     if (authUserId != null) {
+    //   final QuerySnapshot result = await FirebaseFirestore.instance
+    //       .collection('users')
+    //       .where('id', isEqualTo: authUserId)
+    //       .get();
+    //   final List<DocumentSnapshot> documents = result.docs;
+    //   String? dbUserId = documents[0].id;
+    //   await prefs?.setString('id', dbUserId);
+        await prefs?.setString('id', authUserId!);
 
       Fluttertoast.showToast(msg: "Sign in success");
       this.setState(() {
@@ -92,7 +93,8 @@ class LoginScreenState extends State<LoginScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => ChatCatalog(userId: dbUserId)));
+              //builder: (context) => ChatCatalog(userId: dbUserId)));
+              builder: (context) => ChatCatalog(userId: authUserId)));
     } else {
       Fluttertoast.showToast(msg: "Sign in fail");
       this.setState(() {

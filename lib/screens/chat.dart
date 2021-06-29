@@ -86,9 +86,10 @@ class ChatScreenState extends State<ChatScreen> {
 
   readLocal() async {
     prefs = await SharedPreferences.getInstance();
-    var dbUserId = prefs?.getString('id') ?? '';
-    var snapshot = await FirebaseFirestore.instance.collection('users').doc(dbUserId).get();
-    var id = snapshot.get('id');
+   // var dbUserId = prefs?.getString('id') ?? '';
+   // var snapshot = await FirebaseFirestore.instance.collection('users').doc(dbUserId).get();
+   // var id = snapshot.get('id');
+    id = prefs?.getString('id');
     if (id.hashCode <= peerId.hashCode) {
       groupChatId = 'messages-$id-$peerId';
     } else {
